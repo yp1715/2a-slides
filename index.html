@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MSK &amp; Trauma — FRCR 2A Question Bank</title>
+<style>
+  :root{
+    --bg:#080a0c;--film:#000;--panel:#10151a;--panel2:#161d24;
+    --line:#232c34;--line2:#2f3a44;
+    --ink:#c8d2da;--dim:#7c8893;--faint:#566069;
+    --teal:#2dd4bf;--ok:#34d399;--okdim:#0f3d31;--bad:#fb7185;--baddim:#3d1622;--flag:#fbbf24;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+  #app{display:flex;flex-direction:column;height:100dvh;max-width:1100px;margin:0 auto}
+
+  header{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--line);
+         background:linear-gradient(#11161b,#0c1014);flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;line-height:1.15;margin-right:4px}
+  .brand b{font-size:13px;letter-spacing:.03em}
+  .brand span{font:600 9px/1 var(--mono);color:var(--teal);letter-spacing:.16em;text-transform:uppercase}
+  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line2);border-radius:6px;
+         padding:6px 8px;font:600 12px var(--sans);cursor:pointer}
+  .spacer{flex:1}
+  .stat{font-family:var(--mono);text-align:right;line-height:1.1;min-width:42px}
+  .stat .v{font-size:15px;font-weight:600}
+  .stat .l{font-size:8px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+  .stat.acc .v{color:var(--teal)}
+  .vsep{width:1px;height:24px;background:var(--line2)}
+  .iconbtn{background:none;border:1px solid var(--line2);color:var(--dim);border-radius:6px;
+           width:32px;height:32px;cursor:pointer;font-size:14px;line-height:1}
+  .iconbtn:hover{border-color:var(--teal);color:#fff}
+
+  main{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 14px 6px}
+  .viewport{position:relative;flex:1;min-height:0;background:var(--film);border:1px solid var(--line2);
+            border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .viewport img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+  .vp-loading{position:absolute;color:var(--faint);font:600 11px var(--mono);letter-spacing:.1em}
+  .bracket{position:absolute;width:18px;height:18px;border:2px solid rgba(45,212,191,.5);pointer-events:none}
+  .bracket.tl{top:8px;left:8px;border-right:0;border-bottom:0}
+  .bracket.tr{top:8px;right:8px;border-left:0;border-bottom:0}
+  .bracket.bl{bottom:8px;left:8px;border-right:0;border-top:0}
+  .bracket.br{bottom:8px;right:8px;border-left:0;border-top:0}
+  .ov{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.07em;
+      color:rgba(160,210,200,.6);pointer-events:none;text-shadow:0 1px 3px #000}
+  .ov.tl{top:11px;left:34px}.ov.tr{top:11px;right:34px;text-align:right}
+  .ov.bl{bottom:11px;left:34px}.ov.br{bottom:11px;right:34px;text-align:right;color:var(--faint)}
+  .ov.flag{color:var(--flag);display:none}
+  .apager{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:none;
+          align-items:center;gap:2px;background:rgba(8,10,12,.82);border:1px solid var(--line2);
+          border-radius:999px;padding:2px;backdrop-filter:blur(3px)}
+  .apager button{background:none;border:0;color:var(--dim);font:700 12px var(--mono);width:26px;height:24px;cursor:pointer;border-radius:999px}
+  .apager button:hover{color:#fff}
+  .apager .lab{font:600 10px var(--mono);color:var(--teal);padding:0 4px;letter-spacing:.1em}
+  .vp-toggle{position:absolute;bottom:10px;right:12px;display:none;border:1px solid var(--line2);
+             border-radius:999px;overflow:hidden;background:rgba(8,10,12,.82);backdrop-filter:blur(3px)}
+  .vp-toggle button{background:none;border:0;color:var(--dim);font:600 10px var(--mono);letter-spacing:.1em;padding:6px 12px;cursor:pointer}
+  .vp-toggle button.on{background:var(--teal);color:#04221d}
+
+  .result{height:0;overflow:hidden;transition:height .18s;margin-top:8px;border-radius:6px}
+  .result.show{height:auto;padding:9px 13px;border:1px solid var(--line2)}
+  .result.correct{background:var(--okdim);border-color:#1c5e4c}
+  .result.wrong{background:var(--baddim);border-color:#6e2738}
+  .result.neutral{background:var(--panel2);border-color:var(--line2)}
+  .result .tag{font:700 11px var(--mono);letter-spacing:.13em;text-transform:uppercase}
+  .result.correct .tag{color:var(--ok)}.result.wrong .tag{color:var(--bad)}.result.neutral .tag{color:var(--teal)}
+  .result .dx{font-size:13px;margin-top:3px}.result .dx b{color:#fff}
+
+  .controls{margin-top:10px;min-height:52px}
+  .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .opt{border:1px solid var(--line2);background:var(--panel2);color:var(--ink);border-radius:7px;
+       padding:14px 0;font:700 17px var(--sans);cursor:pointer;transition:.1s}
+  .opt:hover:not(:disabled){border-color:var(--teal);color:#fff}
+  .opt:active:not(:disabled){transform:translateY(1px)}
+  .opt:disabled{cursor:default}
+  .opt.correct{background:var(--ok);color:#04221d;border-color:var(--ok)}
+  .opt.wrong{background:var(--bad);color:#2a0710;border-color:var(--bad)}
+  .opt.muted{opacity:.4}
+  .selfrow{display:flex;gap:8px}
+  .selfrow .btn{flex:1;justify-content:center;padding:14px}
+
+  footer{display:flex;align-items:center;gap:8px;padding:9px 14px;border-top:1px solid var(--line);background:#0b0f13}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line2);
+       background:var(--panel);color:var(--ink);border-radius:7px;padding:9px 13px;font:600 12px var(--sans);cursor:pointer}
+  .btn:hover{border-color:var(--teal);color:#fff}
+  .btn.primary{background:var(--teal);color:#04221d;border-color:var(--teal)}
+  .btn.good{background:var(--ok);color:#04221d;border-color:var(--ok)}
+  .btn.bad{background:var(--bad);color:#2a0710;border-color:var(--bad)}
+  .btn:disabled{opacity:.35;cursor:default}
+  .btn .badge{font:700 10px var(--mono);background:var(--flag);color:#3a2a00;border-radius:999px;padding:1px 6px}
+  .btn.ghost{background:none}
+  .progwrap{flex:1;display:flex;flex-direction:column;gap:3px}
+  .progbar{height:8px;border-radius:999px;background:#0d1216;border:1px solid var(--line2);overflow:hidden;display:flex;cursor:pointer}
+  .progbar i{height:100%;display:block}
+  .progmeta{font:600 9px var(--mono);color:var(--faint);text-align:center;letter-spacing:.1em}
+
+  .scrim{position:fixed;inset:0;background:rgba(4,6,8,.74);display:none;align-items:center;justify-content:center;z-index:9;padding:20px}
+  .scrim.show{display:flex}
+  .card{background:var(--panel);border:1px solid var(--line2);border-radius:12px;max-width:400px;width:100%;padding:22px;text-align:center}
+  .card h2{margin:0 0 2px;font-size:18px}.card .big{font:700 44px var(--mono);color:var(--teal);margin:12px 0 2px}
+  .card .sub{color:var(--dim);font-size:12px;margin-bottom:16px}.card .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+  @media (max-width:580px){
+    .brand{margin-right:auto}.brand b{font-size:12px}
+    header{gap:8px;padding:8px 10px}.stat{min-width:36px}.stat .v{font-size:13px}
+    .opt{font-size:15px;padding:12px 0}main{padding:10px 10px 6px}
+    footer{gap:6px;padding:8px 10px}.btn{padding:9px 10px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><b>MSK &amp; Trauma</b><span>FRCR 2A · Question Bank</span></div>
+    <select id="selSource" title="Source"></select>
+    <select id="selPaper" title="Paper" style="display:none"></select>
+    <div class="spacer"></div>
+    <div class="stat"><div class="v" id="sCorrect">0</div><div class="l">Right</div></div>
+    <div class="vsep"></div>
+    <div class="stat"><div class="v" id="sSeen">0</div><div class="l">Done</div></div>
+    <div class="vsep"></div>
+    <div class="stat acc"><div class="v" id="sAcc">—</div><div class="l">Acc</div></div>
+    <button class="iconbtn" id="bShuffle" title="Shuffle order">⤮</button>
+    <button class="iconbtn" id="bReset" title="Reset progress">⟲</button>
+  </header>
+
+  <main>
+    <div class="viewport" id="vp">
+      <div class="vp-loading" id="vpLoad">LOADING…</div>
+      <img id="film" alt="case" style="display:none">
+      <span class="bracket tl"></span><span class="bracket tr"></span><span class="bracket bl"></span><span class="bracket br"></span>
+      <div class="ov tl" id="ovMeta"></div>
+      <div class="ov tr" id="ovScore"></div>
+      <div class="ov bl" id="ovSrc"></div>
+      <div class="ov br" id="ovState">QUESTION</div>
+      <div class="ov tr flag" id="ovFlag">⚑ FLAGGED</div>
+      <div class="apager" id="aPager"><button data-d="-1">‹</button><span class="lab" id="aLab">1/1</span><button data-d="1">›</button></div>
+      <div class="vp-toggle" id="vpToggle"><button data-v="q" class="on">QUESTION</button><button data-v="a">ANSWER</button></div>
+    </div>
+
+    <div class="result" id="result"><div class="tag" id="resTag"></div><div class="dx" id="resDx"></div></div>
+
+    <div class="controls" id="controls"></div>
+  </main>
+
+  <footer>
+    <button class="btn ghost iconbtn" id="bFlag" title="Flag (F)">⚑</button>
+    <button class="btn" id="bPrev">‹</button>
+    <div class="progwrap">
+      <div class="progbar" id="progbar"></div>
+      <div class="progmeta" id="progmeta"></div>
+    </div>
+    <button class="btn ghost" id="bReview">Misses <span class="badge" id="missCount" style="display:none">0</span></button>
+    <button class="btn primary" id="bNext">Next ›</button>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"><div class="card">
+  <h2 id="cardTitle">Set complete</h2>
+  <div class="big" id="cardScore">0/0</div>
+  <div class="sub" id="cardSub"></div>
+  <div class="row">
+    <button class="btn" id="cardReview">Review misses</button>
+    <button class="btn primary" id="cardRestart">Restart set</button>
+  </div>
+</div></div>
+
+<script src="questions.js"></script>
+<script>
+const Q = window.QUESTIONS;
+const KEY = "msk_bank_v1";
+const SOURCES = [...new Set(Q.map(q=>q.source))];
+let state = { answers:{}, flags:{}, src:"All", paper:"All", mode:"all", cur:0, shuffleSeed:0 };
+let viewing="q", aIdx=0;
+const $=id=>document.getElementById(id);
+
+/* storage: localStorage (hosted/local) with window.storage fallback (in-chat preview) */
+const store={
+  async get(k){ try{ if(window.storage){const r=await window.storage.get(k);return r?r.value:null;} return localStorage.getItem(k);}catch(e){return null;} },
+  async set(k,v){ try{ if(window.storage){await window.storage.set(k,v);} else localStorage.setItem(k,v);}catch(e){} }
+};
+async function load(){ const r=await store.get(KEY); if(r){try{Object.assign(state,JSON.parse(r));}catch(e){}} }
+async function save(){ await store.set(KEY, JSON.stringify(state)); }
+
+/* deterministic shuffle */
+function seeded(arr,seed){ const a=[...arr]; let s=seed||1; const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function pool(){
+  let list=Q.filter(q=> (state.src==="All"||q.source===state.src));
+  if(state.src==="Masterpass" && state.paper!=="All") list=list.filter(q=>q.paper===+state.paper);
+  if(state.shuffleSeed) list=seeded(list,state.shuffleSeed);
+  return list;
+}
+function active(){
+  let list=pool();
+  if(state.mode==="review") list=list.filter(q=>state.answers[q.id] && state.answers[q.id].got===false);
+  return list;
+}
+function poolStats(){
+  const ids=pool().map(q=>q.id); let c=0,s=0;
+  for(const id of ids){const a=state.answers[id]; if(a){s++; if(a.got)c++;}}
+  return {c,s,total:ids.length};
+}
+
+function buildSelectors(){
+  const ss=$("selSource"); ss.innerHTML="";
+  ["All",...SOURCES].forEach(s=>{const o=document.createElement("option");o.value=s;
+    o.textContent=s==="All"?"All sources":s; ss.appendChild(o);});
+  ss.value=state.src;
+  const sp=$("selPaper"); sp.innerHTML="";
+  ["All","1","2","3"].forEach(p=>{const o=document.createElement("option");o.value=p;
+    o.textContent=p==="All"?"All papers":"Paper "+p; sp.appendChild(o);});
+  sp.value=state.paper;
+  sp.style.display = state.src==="Masterpass" ? "" : "none";
+}
+
+function preload(srcs){ srcs.forEach(s=>{const im=new Image(); im.src=s;}); }
+
+function render(){
+  const list=active();
+  if(list.length===0){ state.mode="all"; }
+  const L=active();
+  if(state.cur>=L.length) state.cur=Math.max(0,L.length-1);
+  const q=L[state.cur];
+  if(!q){ $("vpLoad").textContent="No cases in this view"; $("vpLoad").style.display="block"; $("film").style.display="none"; $("controls").innerHTML=""; return; }
+  const ans=state.answers[q.id];
+  const answered=!!ans;
+  if(!answered) viewing="q";
+
+  // image
+  const img=$("film"); const load=$("vpLoad");
+  const srcPath = viewing==="a" ? q.a[Math.min(aIdx,q.a.length-1)] : q.q;
+  if(img.getAttribute("src")!==srcPath){
+    load.style.display="block"; img.style.display="none";
+    img.onload=()=>{load.style.display="none";img.style.display="block";};
+    img.onerror=()=>{load.textContent="Image not found — serve the folder (GitHub Pages / local server), not file://";};
+    img.src=srcPath;
+  }
+  // preload neighbours
+  if(L[state.cur+1]) preload([L[state.cur+1].q]);
+
+  // overlays
+  $("ovMeta").textContent = `CASE ${state.cur+1}/${L.length}`;
+  $("ovSrc").textContent = q.source.toUpperCase() + (q.paper?` · P${q.paper} Q${q.num}`:"");
+  $("ovState").textContent = viewing==="a" ? "ANSWER + NOTES" : (q.auto?"SBA QUESTION":"SPOT DIAGNOSIS");
+  const ps=poolStats();
+  $("ovScore").textContent = `${String(ps.c).padStart(3,"0")} · ${ps.s?Math.round(100*ps.c/ps.s):0}%`;
+  $("ovFlag").style.display = state.flags[q.id]?"block":"none";
+  $("ovScore").style.display = state.flags[q.id]?"none":"block";
+
+  // answer pager (multi-slide answers)
+  const multi = viewing==="a" && q.a.length>1;
+  $("aPager").style.display = multi?"flex":"none";
+  if(multi) $("aLab").textContent=`${aIdx+1}/${q.a.length}`;
+  $("vpToggle").style.display = answered?"flex":"none";
+  [...$("vpToggle").children].forEach(b=>b.classList.toggle("on",b.dataset.v===viewing));
+
+  // controls
+  const ctr=$("controls"); ctr.innerHTML="";
+  if(q.auto){
+    const pad=document.createElement("div"); pad.className="pad";
+    ["A","B","C","D","E"].forEach(Lt=>{
+      const b=document.createElement("button"); b.className="opt"; b.textContent=Lt;
+      if(answered){ b.disabled=true;
+        if(Lt===q.correct) b.classList.add("correct");
+        else if(ans.choice===Lt) b.classList.add("wrong");
+        else b.classList.add("muted");
+      } else b.onclick=()=>answerAuto(q,Lt);
+      pad.appendChild(b);
+    });
+    ctr.appendChild(pad);
+  } else {
+    if(!answered && viewing==="q"){
+      const b=document.createElement("button"); b.className="btn primary"; b.style.width="100%"; b.style.padding="14px";
+      b.textContent="Reveal answer"; b.onclick=()=>{viewing="a";aIdx=0;render();};
+      ctr.appendChild(b);
+    } else if(!answered && viewing==="a"){
+      const row=document.createElement("div"); row.className="selfrow";
+      const g=document.createElement("button"); g.className="btn good"; g.textContent="✓ I got it right"; g.onclick=()=>answerSelf(q,true);
+      const w=document.createElement("button"); w.className="btn bad"; w.textContent="✗ I missed it"; w.onclick=()=>answerSelf(q,false);
+      row.append(g,w); ctr.appendChild(row);
+    } else {
+      const b=document.createElement("button"); b.className="btn"; b.style.width="100%"; b.style.padding="13px";
+      b.textContent = ans.got?"Marked correct — re-mark":"Marked incorrect — re-mark";
+      b.onclick=()=>{ delete state.answers[q.id]; viewing="a"; save(); render(); };
+      ctr.appendChild(b);
+    }
+  }
+
+  // result strip
+  const res=$("result");
+  if(answered){
+    res.className="result show "+(ans.got?"correct":"wrong");
+    $("resTag").textContent=ans.got?"Correct":"Incorrect";
+    if(q.auto){
+      $("resDx").innerHTML = ans.got ? `Answer <b>${q.correct}</b>${q.dx?" — "+esc(q.dx):""}`
+        : `You chose <b>${ans.choice}</b>. Answer is <b>${q.correct}</b>${q.dx?" — "+esc(q.dx):""}`;
+    } else $("resDx").innerHTML = `Self-marked${ans.got?" correct":" incorrect"}. Diagnosis shown on the answer slide.`;
+  } else if(!q.auto && viewing==="a"){
+    res.className="result show neutral"; $("resTag").textContent="Reviewing answer"; $("resDx").textContent="Did you get it? Mark yourself below.";
+  } else res.className="result";
+
+  // header stats (pool-wide)
+  $("sCorrect").textContent=ps.c; $("sSeen").textContent=`${ps.s}/${ps.total}`;
+  $("sAcc").textContent=ps.s?Math.round(100*ps.c/ps.s)+"%":"—";
+
+  // misses
+  const misses=pool().filter(x=>state.answers[x.id]&&state.answers[x.id].got===false).length;
+  $("missCount").style.display=misses?"inline-block":"none"; $("missCount").textContent=misses;
+  $("bReview").classList.toggle("primary",state.mode==="review");
+  $("bReview").firstChild.textContent=state.mode==="review"?"All ":"Misses ";
+
+  // progress bar (segments by status, proportional)
+  const pb=$("progbar"); pb.innerHTML="";
+  const segs=L.map((x,i)=>{const a=state.answers[x.id]; return i===state.cur?"cur":(a?(a.got?"ok":"bad"):"none");});
+  const colors={ok:"var(--ok)",bad:"var(--bad)",none:"#1b2229",cur:"var(--teal)"};
+  segs.forEach((s,i)=>{const seg=document.createElement("i"); seg.style.flex="1"; seg.style.background=colors[s];
+    if(s==="cur")seg.style.boxShadow="0 0 0 1px var(--teal)"; pb.appendChild(seg);});
+  pb.onclick=e=>{const r=pb.getBoundingClientRect(); const f=(e.clientX-r.left)/r.width;
+    state.cur=Math.max(0,Math.min(L.length-1,Math.floor(f*L.length))); viewing="q"; render();};
+  $("progmeta").textContent = `${L.length} cases · ${q.auto?"auto-graded":"self-graded"}`;
+
+  $("bPrev").disabled=state.cur===0;
+  $("bFlag").classList.toggle("primary",!!state.flags[q.id]);
+  $("bNext").textContent = state.cur>=L.length-1 ? "Finish" : "Next ›";
+}
+function esc(s){return (s||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));}
+
+function answerAuto(q,L){ if(state.answers[q.id])return; state.answers[q.id]={got:L===q.correct,choice:L}; viewing="a"; aIdx=0; save(); render(); }
+function answerSelf(q,got){ state.answers[q.id]={got}; save(); render(); }
+
+function next(){ const L=active(); if(state.cur>=L.length-1){finish();return;} state.cur++; viewing="q"; aIdx=0; render(); }
+function prev(){ if(state.cur>0){state.cur--;viewing="q";aIdx=0;render();} }
+
+function finish(){
+  const ps=poolStats(); const acc=ps.s?Math.round(100*ps.c/ps.s):0; const miss=ps.s-ps.c;
+  $("cardTitle").textContent = state.mode==="review"?"Review complete":"Set complete";
+  $("cardScore").textContent=`${ps.c}/${ps.s||ps.total}`;
+  $("cardSub").textContent = miss>0?`${acc}% accuracy · ${miss} to review`:`${acc}% accuracy · clean sweep`;
+  $("cardReview").style.display=miss>0?"inline-flex":"none";
+  $("scrim").classList.add("show");
+}
+
+/* events */
+$("selSource").onchange=e=>{state.src=e.target.value;state.paper="All";state.mode="all";state.cur=0;viewing="q";buildSelectors();save();render();};
+$("selPaper").onchange=e=>{state.paper=e.target.value;state.mode="all";state.cur=0;viewing="q";save();render();};
+$("bNext").onclick=next; $("bPrev").onclick=prev;
+$("bFlag").onclick=()=>{const q=active()[state.cur];if(!q)return;state.flags[q.id]=!state.flags[q.id];save();render();};
+$("bReview").onclick=()=>{state.mode=state.mode==="review"?"all":"review";state.cur=0;viewing="q";render();};
+$("bShuffle").onclick=()=>{state.shuffleSeed=state.shuffleSeed?0:(Date.now()%99999+1);state.cur=0;viewing="q";save();render();};
+$("bReset").onclick=()=>{ if(confirm("Reset all scores, flags and progress?")){state.answers={};state.flags={};state.mode="all";state.cur=0;viewing="q";save();render();} };
+$("vpToggle").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewing=b.dataset.v;aIdx=0;render();};
+$("aPager").onclick=e=>{const b=e.target.closest("button");if(!b)return;const q=active()[state.cur];aIdx=(aIdx+ +b.dataset.d+q.a.length)%q.a.length;render();};
+$("cardRestart").onclick=()=>{ const ids=pool().map(q=>q.id); ids.forEach(id=>{delete state.answers[id];}); state.mode="all";state.cur=0;viewing="q";$("scrim").classList.remove("show");save();render(); };
+$("cardReview").onclick=()=>{$("scrim").classList.remove("show");state.mode="review";state.cur=0;viewing="q";render();};
+$("scrim").onclick=e=>{if(e.target===$("scrim"))$("scrim").classList.remove("show");};
+
+document.addEventListener("keydown",e=>{
+  if($("scrim").classList.contains("show"))return;
+  if(e.target.tagName==="SELECT")return;
+  const q=active()[state.cur]; if(!q)return; const ans=state.answers[q.id];
+  const k=e.key.toUpperCase();
+  if(q.auto && !ans && "ABCDE".includes(k)) answerAuto(q,k);
+  else if(q.auto && !ans && "12345".includes(k)) answerAuto(q,"ABCDE"[+k-1]);
+  else if(!q.auto && !ans && (e.key===" "||k==="R")){ e.preventDefault(); if(viewing==="q"){viewing="a";render();} }
+  else if(!q.auto && !ans && viewing==="a" && (k==="Y"||k==="1")) answerSelf(q,true);
+  else if(!q.auto && !ans && viewing==="a" && (k==="N"||k==="0")) answerSelf(q,false);
+  else if(e.key==="ArrowRight") next();
+  else if(e.key==="ArrowLeft") prev();
+  else if(k==="F"){state.flags[q.id]=!state.flags[q.id];save();render();}
+  else if(k==="R"&&ans){viewing=viewing==="a"?"q":"a";render();}
+});
+
+(async()=>{ await load(); buildSelectors(); render(); })();
+</script>
+</body>
+</html>
